@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feliz aniversário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --noite:#070d2b; --mar:#12206b; --ceu:#8fb4ff; --luz:#eaf1ff; --texto:#cdd9ff; --ouro:#ffd98a;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--texto);
+  font:400 1.06rem/1.75 "Nunito", system-ui, sans-serif;
+  background:linear-gradient(180deg,var(--noite) 0%,#0d1750 55%,#1a2a7a 100%) fixed;
+}
+canvas{position:fixed; inset:0; width:100%; height:100%; pointer-events:none}
+#bg{z-index:0}
+#fx{z-index:20}
+main{position:relative; z-index:1}
+section,header{padding:5rem 1.4rem; max-width:44rem; margin:0 auto}
+h1,h2{font-family:"Fraunces", Georgia, serif; color:var(--luz); font-weight:600; text-wrap:balance}
+h2{font-size:clamp(1.6rem,5vw,2.2rem); text-align:center; margin:0 0 2rem}
+
+/* abertura */
+.hero{min-height:100svh; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; position:relative}
+.hero::before{
+  content:""; position:absolute; width:min(80vw,460px); aspect-ratio:1; z-index:-1;
+  background:radial-gradient(circle, rgba(143,180,255,.3), transparent 65%);
+}
+h1{font-size:clamp(2.5rem,10vw,5.4rem); line-height:1.05; margin:0 0 1rem}
+.data{font-size:1.2rem; margin:0; color:var(--ouro)}
+.dica{position:absolute; bottom:2rem; font-size:.95rem; opacity:.7; margin:0}
+
+/* carta */
+.texto p{margin:0 0 1.2rem; max-width:34rem; margin-inline:auto}
+.ass{max-width:34rem; margin:2rem auto 0; font-family:"Fraunces", Georgia, serif; font-size:1.25rem; color:var(--luz)}
+
+/* constelação */
+#sky{width:100%; height:auto; overflow:visible; display:block}
+.ln{fill:none; stroke:rgba(143,180,255,.45); stroke-width:1.2; stroke-dasharray:4 6}
+.st{cursor:pointer; outline:none}
+.core{fill:var(--ouro); filter:drop-shadow(0 0 6px var(--ouro)); transform-box:fill-box; transform-origin:center; transition:transform .25s}
+.ring{fill:none; stroke:transparent; stroke-width:2}
+.st:hover .core,.st.on .core{transform:scale(1.8)}
+.st:focus-visible .ring{stroke:var(--luz)}
+#cap{min-height:5.5rem; text-align:center; font-family:"Fraunces", Georgia, serif; font-size:1.3rem; color:var(--luz); max-width:30rem; margin:1.5rem auto 0}
+#cap.vazio{font-family:"Nunito", system-ui, sans-serif; font-size:1rem; color:var(--texto); opacity:.75}
+
+/* fotos */
+#grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem}
+figure{margin:0}
+.foto{aspect-ratio:4/5; border-radius:14px; overflow:hidden; border:1px solid rgba(143,180,255,.35); background:rgba(18,32,107,.35); display:flex; align-items:center; justify-content:center; text-align:center; font-size:.95rem; padding:1rem}
+.foto img{width:100%; height:100%; object-fit:cover; display:block}
+.foto.vazia{border-style:dashed}
+figcaption{margin-top:.5rem; font-size:.95rem; text-align:center}
+
+/* final */
+#final{min-height:70svh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center}
+#pedido{font-family:"Fraunces", Georgia, serif; font-size:clamp(1.4rem,5vw,1.9rem); color:var(--luz); margin:0 0 1.6rem}
+button{
+  font:600 1.05rem "Nunito", system-ui, sans-serif; min-height:48px; padding:.7rem 1.8rem;
+  border:0; border-radius:999px; background:var(--ouro); color:var(--noite); cursor:pointer;
+}
+button:focus-visible{outline:3px solid var(--luz); outline-offset:3px}
+#msg{margin-top:2rem; font-family:"Fraunces", Georgia, serif; font-size:clamp(1.8rem,7vw,3rem); line-height:1.15; color:var(--luz)}
+#msg small{display:block; margin-top:.8rem; font:400 1.1rem "Nunito", system-ui, sans-serif; color:var(--ouro)}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<main>
+  <header class="hero">
+    <h1 id="h1"></h1>
+    <p class="data" id="data"></p>
+    <p class="dica">role para baixo</p>
+  </header>
+
+  <section id="carta">
+    <h2 id="tcarta"></h2>
+    <div class="texto" id="texto"></div>
+    <p class="ass" id="ass"></p>
+  </section>
+
+  <section id="const">
+    <h2>Sua constelação</h2>
+    <svg id="sky" viewBox="0 0 600 340" role="group" aria-label="Constelação com frases"></svg>
+    <p id="cap" class="vazio" aria-live="polite">Toque em uma estrela.</p>
+  </section>
+
+  <section id="fotos">
+    <h2>Alguns registros</h2>
+    <div id="grid"></div>
+  </section>
+
+  <section id="final">
+    <p id="pedido"></p>
+    <button id="btn" type="button">Fazer um pedido</button>
+    <p id="msg" hidden></p>
+  </section>
+</main>
+
+<script>
+/* ============ EDITE AQUI ============ */
+const CONFIG = {
+  nome: "Clarinha",
+  nomeCompleto: "Maria Clara Ikeda",
+  data: "9 de novembro",
+  de: "Kauan Oliveira",
+
+  tituloCarta: "Uma carta para você",
+  // Cada item da lista vira um parágrafo.
+  carta: [
+    "E estamos aqui... 4 anos depois de nos conhecermos, quem diria que se passaria tanto tempo deis de aquele acontecimento.",
+    "Continuamos crescendo e nos esquecendo de quanto tempo somos amigos, mas ainda assim, meu carinho e consideração por você nunca sumiu, apesar de tudo, afastamentos, discussões no passado, brigas etc, nunca deixei de te respeitar, então venho te dar esse presente, como uma forma de simbolizar isso da minha forma (como programador) e mostrar o quanto você é especial, não só para mim, mas suas inumeras amizades.",
+    "Contudo, venho aqui lhe dizer, Feliz Aniversario, minha amiga e parceira, lhe desejo tudo de bom, que Deus lhe abençoe sempre e que você continue sendo essa supergirl que você sempre foi, com seu brilho, jeito feminino e amor, continue trazendo mudanças boas na vida de seus amigos, assim como fez com a minha. Tudo de bom, minha amiga.❤️❤️🥳"
+  ],
+
+  // Cada frase vira uma estrela da constelação (de 3 a 9 frases).
+  motivos: [
+    "Motivo 1: Amizade de anos.",
+    "Motivo 2: No afastamento e na volta, sempre sendo amigos.",
+    "Motivo 3: Parceira de anos.",
+    "Motivo 4: Amiguinha Linda.",
+    "Motivo 5: discussões sobre astronomia.",
+    "Motivo 6: Os dois se ajudando em problemas com relacionamento! .",
+    "Motivo 7: Fim."
+  ],
+
+  // src: caminho da imagem na mesma pasta (ex.: "foto1.jpg"). Vazio mostra um espaço reservado.
+  fotos: [
+    { src: "IMG 1.jpg", legenda: "Sempre brilhando, como se fosse uma luz na escuridação" },
+    { src: "IMG 2.jpg", legenda: "Jeitinho Fofo" },
+    { src: "IMG 3.jpg", legenda: "Sorriso que brilha mais que as estrelas" }
+  ],
+
+  pedido: "Feche os olhos e faça um pedido.",
+  final: "Feliz aniversário, Clarinha!"
+};
+/* ================================== */
+
+const C = CONFIG, $ = s => document.querySelector(s);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+document.title = "Feliz aniversário, " + C.nome;
+$("#h1").textContent = "Feliz aniversário, " + C.nome;
+$("#data").textContent = C.data;
+$("#tcarta").textContent = C.tituloCarta;
+C.carta.forEach(t => { const p = document.createElement("p"); p.textContent = t; $("#texto").appendChild(p); });
+$("#ass").textContent = "Com carinho, " + C.de;
+$("#pedido").textContent = C.pedido;
+
+/* fotos */
+C.fotos.forEach(f => {
+  const fig = document.createElement("figure");
+  const box = document.createElement("div");
+  box.className = "foto";
+  const legenda = f.legenda || "";
+  if (f.src) {
+    const im = document.createElement("img");
+    im.alt = legenda;
+    im.addEventListener("error", () => { box.classList.add("vazia"); box.textContent = "Não achei a imagem: " + f.src; });
+    im.src = f.src;
+    box.appendChild(im);
+  } else { box.classList.add("vazia"); box.textContent = "Sua foto aqui"; }
+  fig.append(box);
+  if (legenda) { const cap = document.createElement("figcaption"); cap.textContent = legenda; fig.append(cap); }
+  $("#grid").appendChild(fig);
+});
+
+/* constelação */
+const P = [[70,250],[150,150],[250,205],[330,90],[420,170],[500,70],[540,240],[300,300],[200,300]];
+const pts = P.slice(0, Math.min(C.motivos.length, P.length));
+const sky = $("#sky"), NS = "http://www.w3.org/2000/svg";
+const ln = document.createElementNS(NS, "polyline");
+ln.setAttribute("points", pts.map(p => p.join(",")).join(" "));
+ln.setAttribute("class", "ln");
+sky.appendChild(ln);
+function escolher(i) {
+  document.querySelectorAll(".st").forEach((s, j) => s.classList.toggle("on", j === i));
+  const cap = $("#cap"); cap.classList.remove("vazio"); cap.textContent = C.motivos[i];
+}
+pts.forEach((p, i) => {
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("class", "st"); g.setAttribute("tabindex", "0"); g.setAttribute("role", "button");
+  g.setAttribute("aria-label", "Estrela " + (i + 1)); g.setAttribute("transform", "translate(" + p + ")");
+  g.innerHTML = '<circle r="22" fill="transparent"/><circle class="ring" r="15"/><circle class="core" r="5"/>';
+  g.addEventListener("click", () => escolher(i));
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); escolher(i); } });
+  sky.appendChild(g);
+});
+
+/* céu de fundo */
+const bg = $("#bg"), g = bg.getContext("2d");
+let W, H, stars = [], shoot = null;
+function tamanho() {
+  const d = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+  bg.width = W * d; bg.height = H * d; g.setTransform(d, 0, 0, d, 0, 0);
+  stars = Array.from({ length: Math.round(W * H / 5000) }, () => ({
+    x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.3 + .3, p: Math.random() * 6.28, s: Math.random() * 1.5 + .5
+  }));
+  if (reduce) quadro(0);
+}
+function quadro(t) {
+  g.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    const a = reduce ? .8 : .55 + .45 * Math.sin(t / 700 * s.s + s.p);
+    g.fillStyle = "rgba(234,241,255," + a + ")";
+    g.beginPath(); g.arc(s.x, s.y, s.r, 0, 6.283); g.fill();
+  }
+  if (!reduce) {
+    if (!shoot && Math.random() < .004) shoot = { x: W * .2 + Math.random() * W * .8, y: Math.random() * H * .4, l: 0 };
+    if (shoot) {
+      shoot.x -= 9; shoot.y += 4; shoot.l++;
+      const gr = g.createLinearGradient(shoot.x, shoot.y, shoot.x + 90, shoot.y - 40);
+      gr.addColorStop(0, "rgba(255,217,138,1)"); gr.addColorStop(1, "rgba(255,217,138,0)");
+      g.strokeStyle = gr; g.lineWidth = 2; g.beginPath();
+      g.moveTo(shoot.x, shoot.y); g.lineTo(shoot.x + 90, shoot.y - 40); g.stroke();
+      if (shoot.l > 70) shoot = null;
+    }
+    requestAnimationFrame(quadro);
+  }
+}
+addEventListener("resize", tamanho);
+tamanho();
+if (!reduce) requestAnimationFrame(quadro);
+
+/* fogos e confete */
+const fx = $("#fx"), f = fx.getContext("2d");
+const cores = ["#ffd98a", "#8fb4ff", "#ffffff", "#ffb3d1", "#9be7ff"];
+let fogos = [], confete = [], rodando = false, ate = 0;
+function ajustaFx() { const d = devicePixelRatio || 1; fx.width = innerWidth * d; fx.height = innerHeight * d; f.setTransform(d, 0, 0, d, 0, 0); }
+ajustaFx(); addEventListener("resize", ajustaFx);
+const cor = () => cores[Math.floor(Math.random() * cores.length)];
+function estourar(x, y) {
+  const c = cor(), n = 60;
+  for (let i = 0; i < n; i++) {
+    const a = Math.PI * 2 * i / n + Math.random() * .2, v = 2 + Math.random() * 4;
+    fogos.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, l: 1, c: Math.random() < .7 ? c : cor() });
+  }
+}
+function chover(n) {
+  for (let i = 0; i < n; i++) confete.push({
+    x: Math.random() * innerWidth, y: -20, vx: Math.random() - .5, vy: 2 + Math.random() * 3,
+    w: 6 + Math.random() * 6, h: 4 + Math.random() * 5, a: Math.random() * 6.28, va: (Math.random() - .5) * .3, c: cor()
+  });
+}
+function loop() {
+  const w = innerWidth, h = innerHeight, agora = performance.now();
+  f.clearRect(0, 0, w, h);
+  for (const p of fogos) {
+    p.vx *= .985; p.vy = p.vy * .985 + .05; p.x += p.vx; p.y += p.vy; p.l -= .012;
+    f.globalAlpha = Math.max(p.l, 0); f.fillStyle = p.c;
+    f.beginPath(); f.arc(p.x, p.y, 2.2, 0, 6.283); f.fill();
+  }
+  fogos = fogos.filter(p => p.l > 0);
+  for (const c of confete) {
+    c.y += c.vy; c.x += c.vx + Math.sin(c.y / 30); c.a += c.va;
+    f.globalAlpha = 1; f.fillStyle = c.c;
+    f.save(); f.translate(c.x, c.y); f.rotate(c.a); f.fillRect(-c.w / 2, -c.h / 2, c.w, c.h); f.restore();
+  }
+  confete = confete.filter(c => c.y < h + 20);
+  if (agora < ate) {
+    if (Math.random() < .04) estourar(w * (.15 + Math.random() * .7), h * (.15 + Math.random() * .35));
+    if (Math.random() < .5) chover(2);
+  }
+  if (fogos.length || confete.length || agora < ate) requestAnimationFrame(loop);
+  else { rodando = false; f.clearRect(0, 0, w, h); }
+}
+function comemorar() {
+  const m = $("#msg");
+  if (m.hidden) {
+    m.hidden = false;
+    m.textContent = C.final;
+    const s = document.createElement("small"); s.textContent = "De " + C.de; m.appendChild(s);
+  }
+  if (reduce) return;
+  ate = performance.now() + 9000;
+  for (let i = 0; i < 3; i++) estourar(innerWidth * (.25 + i * .25), innerHeight * .3);
+  chover(80);
+  if (!rodando) { rodando = true; loop(); }
+}
+$("#btn").addEventListener("click", comemorar);
+let ja = false;
+new IntersectionObserver(([e]) => { if (e.isIntersecting && !ja) { ja = true; comemorar(); } }, { threshold: .7 }).observe($("#final"));
+</script>
+</body>
+</html>
